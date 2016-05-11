@@ -8,30 +8,31 @@ var fs = require('fs'),
 ;
 
 module.exports = {
-    /**
-    @opts = {
-        sourcePath : path.join($path.dev, 'sprites'), // sprite图片源目录
-        imgDist : path.join($path.dev_server, 'images/sprites'), // sprite图片生成目录
-        defaultImgNameDist : 'common.min', // 通用sprite图片名称
-        cssDist : path.join($path.dev, 'css/sprites'), // 生成css目录
-        cssNameDist : '_mixin.sprite.css', // 生成css的文件名称
-        relativePath : '../images/sprites', // 生成css中的图片相对路径
-        mixinPrefix : 'sp_' // 生成css中mixin的前缀
-    }
-    */
     init : (options) => () => {
         var opts = Object.assign({}, {
-            defaultImgNameDist : 'common.min',
-            cssNameDist : '_mixin.sprite.css',
-            relativePath : '../images/sprites',
-            mixinPrefix : 'sp-',
-            cssTemplate : null
+            source: './src/images/sprites', // sprite图片源目录
+            outputImg: {
+                commonFile: 'common.min', // 通用sprite名
+                path: './dist/images/sprites' // sprites生成目录
+            },
+            outputCss: {
+                file: '_sprites.css', // 生成css文件名
+                path: './dist/css', // 生成css目录
+                baseUrl: '../images/sprites', // 生成css中图片相对路径
+                prefix: 'sp-', // 生成类名的前缀
+                template: (data) => {
+                    return `@define-mixin $sprite ${data.name}{
+                                background-image: url(${data.url});
+                                background-position:${data.position.x} ${data.position.y};
+                            }`
+                }
+            }
         }, options)
-        var _files = fs.readdirSync(opts.sourcePath);
+        var _files = fs.readdirSync(opts.source);
         // 默认一个通用sprite设置
-        var spritesArr = [{ path:opts.sourcePath, name:opts.defaultImgNameDist}];
+        var spritesArr = [{ path:opts.source, name:opts.outputImg.commonFile}];
         _files.forEach( (file) => {
-            var pathName = path.join(opts.sourcePath, file);
+            var pathName = path.join(opts.source, file);
             // 存在分组目录
             if(fs.statSync(pathName).isDirectory()){
                 spritesArr.push({
@@ -60,48 +61,55 @@ module.exports = {
                     cssTemplate: (data) => {
                         var tpl = [];
                         data.sprites.forEach( (row) => {
-                            var cssName = opts.mixinPrefix;
+                            var cssName = opts.outputCss.prefix;
                             // 获取图片分组
-                            var arr = path.relative(opts.sourcePath, row.source_image).split(path.sep);
+                            var arr = path.relative(opts.source, row.source_image).split(path.sep);
 
                             if(arr.length>1){
                                 // 非通用目录，加分组名字
-                                cssName += row.name + '-' + arr[0];
+                                cssName += arr[0] + '-' + row.name;
                             }else{
                                 cssName += row.name;
                             }
-                            var _innerStr = '';
-                            if(!opts.cssTemplate){
-                                _innerStr = `@define-mixin $sprite ${cssName}{
-                                                background-image: url( ${path.join(opts.relativePath, row.escaped_image)});
-                                                background-position:${row.px.offset_x} ${row.px.offset_y};
-                                            }`;
-                            }else{
-                                _innerStr = opts.cssTemplate({
-                                    name: cssName,
-                                    url: path.join(opts.relativePath, row.escaped_image),
-                                    position:{
-                                        x: row.px.offset_x,
-                                        y: row.px.offset_y
-                                    }
-                                })
-                            }
+                            // var _innerStr = '';
+                            // if(!opts.cssTemplate){
+                            //     _innerStr = `@define-mixin $sprite ${cssName}{
+                            //                     background-image: url( ${path.join(opts.outputCss.baseUrl, row.escaped_image)});
+                            //                     background-position:${row.px.offset_x} ${row.px.offset_y};
+                            //                 }`;
+                            // }else{
+                            //     _innerStr = opts.cssTemplate({
+                            //         name: cssName,
+                            //         url: path.join(opts.outputCss.baseUrl, row.escaped_image),
+                            //         position:{
+                            //             x: row.px.offset_x,
+                            //             y: row.px.offset_y
+                            //         }
+                            //     })
+                            // }
 
-                            tpl.push(_innerStr)
+                            tpl.push(opts.outputCss.template({
+                                name: cssName,
+                                url: path.join(opts.outputCss.baseUrl, row.escaped_image),
+                                position:{
+                                    x: row.px.offset_x,
+                                    y: row.px.offset_y
+                                }
+                            }))
                         })
                         return tpl.join('')
                     }
                 }))
 
             cssStreamArr.push(rowStream.css)
-            rowStream.css.pipe(gulp.dest(opts.cssDist))
+            rowStream.css.pipe(gulp.dest(opts.outputCss.path))
 
             rowStream.img
                 .pipe(buffer())
                 // .pipe()mini
-                .pipe(gulp.dest(opts.imgDist))
+                .pipe(gulp.dest(opts.outputImg.path))
         })
 
-        return merge.apply(this, cssStreamArr).pipe(concatCss(opts.cssNameDist)).pipe(gulp.dest(opts.cssDist))
+        return merge.apply(this, cssStreamArr).pipe(concatCss(opts.outputCss.file)).pipe(gulp.dest(opts.outputCss.path))
     }
 }
