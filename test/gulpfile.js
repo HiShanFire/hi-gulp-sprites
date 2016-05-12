@@ -1,6 +1,5 @@
 var gulp = require('gulp');
 
-
 var $sprite = require('../index');
 var exam = $sprite.init({
     source: './src/sprites',
