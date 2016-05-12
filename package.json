@@ -1,15 +1,14 @@
 {
   "name": "hi-gulp-sprites",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "LinHai",
   "license": "ISC",
   "dependencies": {
-    "gulp": "github:gulpjs/gulp#4.0",
     "gulp-concat-css": "^2.2.0",
     "gulp.spritesmith": "^6.2.1",
     "merge-stream": "^1.0.0",

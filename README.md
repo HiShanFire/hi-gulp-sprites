@@ -5,7 +5,7 @@
 
 ## 安装
 ```
-// npm install
+npm install hi-gulp-sprites
 ```
 
 ## 测试
@@ -46,7 +46,7 @@ gulp.task('sprites', $sprite.init(config))
 ```
 
 ## 打包策略图示
-
+![sprites](https://cloud.githubusercontent.com/assets/3962259/15205493/58628638-184a-11e6-8bb7-59e2be0e752e.png)     
 - 默认将`source`路径`(不遍历二级目录)`下的图片合并生成通用sprite`(commonFile为文件名)`     
 - 默认将`source`路径的二级目录为分组`(分组目录下的所有图片都会被合并)`，目录名即为分组名    
 - `分组下不建议再建子目录`（若分组内存在同名的图片，则会生成同名的css配置，最后写入的配置会覆盖之前的）  
