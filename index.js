@@ -4,7 +4,9 @@ var fs = require('fs'),
     spritesmith = require('gulp.spritesmith'),
     buffer = require('vinyl-buffer'),
     merge = require("merge-stream"),
-    concatCss = require('gulp-concat-css')
+    concatCss = require('gulp-concat-css'),
+    imagemin = require('gulp-imagemin'),
+    pngquant = require('imagemin-pngquant')
 ;
 
 module.exports = {
@@ -71,22 +73,6 @@ module.exports = {
                             }else{
                                 cssName += row.name;
                             }
-                            // var _innerStr = '';
-                            // if(!opts.cssTemplate){
-                            //     _innerStr = `@define-mixin $sprite ${cssName}{
-                            //                     background-image: url( ${path.join(opts.outputCss.baseUrl, row.escaped_image)});
-                            //                     background-position:${row.px.offset_x} ${row.px.offset_y};
-                            //                 }`;
-                            // }else{
-                            //     _innerStr = opts.cssTemplate({
-                            //         name: cssName,
-                            //         url: path.join(opts.outputCss.baseUrl, row.escaped_image),
-                            //         position:{
-                            //             x: row.px.offset_x,
-                            //             y: row.px.offset_y
-                            //         }
-                            //     })
-                            // }
 
                             tpl.push(opts.outputCss.template({
                                 name: cssName,
@@ -106,7 +92,10 @@ module.exports = {
 
             rowStream.img
                 .pipe(buffer())
-                // .pipe()mini
+                .pipe(imagemin({
+                    progressive: false,
+                    use: [pngquant()]
+                }))
                 .pipe(gulp.dest(opts.outputImg.path))
         })
 

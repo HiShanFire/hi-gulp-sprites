@@ -10,7 +10,9 @@
   "license": "ISC",
   "dependencies": {
     "gulp-concat-css": "^2.2.0",
+    "gulp-imagemin": "^3.0.1",
     "gulp.spritesmith": "^6.2.1",
+    "imagemin-pngquant": "^5.0.0",
     "merge-stream": "^1.0.0",
     "vinyl-buffer": "^1.0.0"
   }
