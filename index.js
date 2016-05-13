@@ -30,7 +30,13 @@ module.exports = {
                 }
             }
         }, options)
+        if(!fs.existsSync(opts.source)){
+            return gulp.src('./')
+        }
         var _files = fs.readdirSync(opts.source);
+        if(_files.length === 0){
+            return gulp.src('./')
+        }
         // 默认一个通用sprite设置
         var spritesArr = [{ path:opts.source, name:opts.outputImg.commonFile}];
         _files.forEach( (file) => {
