@@ -19,7 +19,7 @@ gulp test
 ```js
 // 项目根目录/gulpfile.js
 var gulp = require('gulp'),
-    $sprite = require('fe-gulp-sprites');
+    $sprite = require('hi-gulp-sprites');
 
 var config = {
     source: './src/sprites', // sprite图片源目录
