@@ -2,9 +2,10 @@
 基于gulp.spritesmith的雪碧图工具构建方案     
 建议采用gulp4
 
-
 ## 安装
 ```
+// node_modules/
+cd
 npm install hi-gulp-sprites
 ```
 
@@ -12,7 +13,8 @@ npm install hi-gulp-sprites
 ```
 // node_modules/hi-gulp-sprites/
 cd test
-gulp test
+gulp postcss
+gulp scss
 ```
 
 ## 基础设置
@@ -28,17 +30,11 @@ var config = {
         path: './dist/images/sprites' // sprites生成目录
     },
     outputCss: {
-        file: '_sprites.scss', // 生成css文件名
+        fileName: '_sprites.scss', // 生成的文件名
+        fileType: 'scss', // 生成的文件格式
         path: './dist/css', // 生成css目录
-        baseUrl: '../images/sprites', // 生成css中图片相对路径
         prefix: 'sp-', // 生成配置类名的前缀
-        template: (data) => { // 输出sprites配置模板
-            // 生成scss配置
-            return `%${data.name}{
-                        background-image: url(${data.url});
-                        background-position:${data.position.x} ${data.position.y};
-                    }`
-        }
+        template: 'scss' // 预设scss、postcss模板，支持自定义模板(function)
     }
 };
 
@@ -46,7 +42,8 @@ gulp.task('sprites', $sprite.init(config))
 ```
 
 ## 打包策略图示
-![sprites](https://cloud.githubusercontent.com/assets/3962259/15205493/58628638-184a-11e6-8bb7-59e2be0e752e.png)     
+![sprites](https://cloud.githubusercontent.com/assets/3962259/15205493/58628638-184a-11e6-8bb7-59e2be0e752e.png)    
+
 - 默认将`source`路径`(不遍历二级目录)`下的图片合并生成通用sprite`(commonFile为文件名)`     
 - 默认将`source`路径的二级目录为分组`(分组目录下的所有图片都会被合并)`，目录名即为分组名    
 - `分组下不建议再建子目录`（若分组内存在同名的图片，则会生成同名的css配置，最后写入的配置会覆盖之前的）  
@@ -84,50 +81,66 @@ dist/css/
 设置前缀为'test-' `(config.outputCss.prefix = 'test-')`
 
 ### SASS
+[Sass在线工具](http://www.sassmeister.com/)
 ```js
 // css 模板
 config.outputCss.template = (data) => {
-    return `%${data.name}{
-                background-image: url(${data.url});
+    return `@mixin ${data.name}($imgUrl:$spriteUrl){
+                background-image: url(#{$imgUrl}${data.img});
                 background-position:${data.position.x} ${data.position.y};
             }`
 }
 ```
 ```scss
-// output
-%test-a{ // ...}
-%test-b{ // ...}
-%test-box-1{ // ...}
-%test-box-2{ // ...}
-%test-box-x{ // ...}
+// template output
+@mixin test-a($imgUrl:$spriteUrl){ // ...}
+@mixin test-b($imgUrl:$spriteUrl){ // ...}
+@mixin test-box-1($imgUrl:$spriteUrl){ // ...}
+@mixin test-box-2($imgUrl:$spriteUrl){ // ...}
+@mixin test-box-x($imgUrl:$spriteUrl){ // ...}
 
 // use
+$spriteUrl:'../images/sprites/';
 .sprites-a{
-    @extend %test-box-1;
+    @include test-a();
+}
+.sprites-b{
+    @include test-a($spriteUrl);
+}
+.sprites-c{
+    @include test-a('../images/foo/');
 }
 ```
 
 ### postcss
-`具体用法参照precss`
+语法参照[Precss](https://github.com/jonathantneal/precss)    
+*[在线工具](http://jonathantneal.github.io/precss/)*
 ```js
 // css 模板
 config.outputCss.template = (data) => {
-    return `@define-mixin $sprite ${data.name}{
-                background-image: url(${data.url});
+    return `@define-mixin ${data.name} $imgUrl:$(spriteUrl){
+                background-image: url($(imgUrl)${data.img});
                 background-position:${data.position.x} ${data.position.y};
             }`
 }
 ```
-```scss
-// output
-@define-mixin $sprite test-a{ // ... }
-@define-mixin $sprite test-b{ // ... }
-@define-mixin $sprite test-box-1{ // ... }
-@define-mixin $sprite test-box-2{ // ... }
-@define-mixin $sprite test-box-x{ // ... }
+```postcss
+// template output
+@define-mixin test-a $imgUrl:$(spriteUrl){ // ... }
+@define-mixin test-b $imgUrl:$(spriteUrl){ // ... }
+@define-mixin test-box-1 $imgUrl:$(spriteUrl){ // ... }
+@define-mixin test-box-2 $imgUrl:$(spriteUrl){ // ... }
+@define-mixin test-box-x $imgUrl:$(spriteUrl){ // ... }
 
 // use
+$spriteUrl: ../images/sprite/;
 .sprites-a{
-    @mixin $sprite test-a;
+    @mixin test-a;
+}
+.sprites-b{
+    @mixin test-b $(spriteUrl);
+}
+.sprites-c{
+    @mixin test-b ../foo/;
 }
 ```
