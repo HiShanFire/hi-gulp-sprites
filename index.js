@@ -9,6 +9,22 @@ var fs = require('fs'),
     pngquant = require('imagemin-pngquant')
 ;
 
+var renderTemplate = (template, data) => {
+        if(template == 'postcss'){
+            return `@define-mixin ${data.name} $imgUrl:$(spriteUrl){
+                        background-image: url($(imgUrl)${data.img});
+                        background-position:${data.position.x} ${data.position.y};
+                    }`
+        }
+        if(template == 'scss'){
+            return `@mixin ${data.name}($imgUrl:$spriteUrl){
+                        background-image: url(#{$imgUrl}${data.img});
+                        background-position:${data.position.x} ${data.position.y};
+                    }`
+        }
+        return template(data)
+}
+
 module.exports = {
     init : (options) => () => {
         var opts = Object.assign({}, {
@@ -18,16 +34,11 @@ module.exports = {
                 path: './dist/images/sprites' // sprites生成目录
             },
             outputCss: {
-                file: '_sprites.css', // 生成css文件名
+                fileName: '_sprites', // 生成css文件名
+                fileType: 'scss',
                 path: './dist/css', // 生成css目录
-                baseUrl: '../images/sprites', // 生成css中图片相对路径
                 prefix: 'sp-', // 生成类名的前缀
-                template: (data) => {
-                    return `@define-mixin $sprite ${data.name}{
-                                background-image: url(${data.url});
-                                background-position:${data.position.x} ${data.position.y};
-                            }`
-                }
+                template: 'scss' // 默认scss，postcss模板，支持传入function
             }
         }, options)
         if(!fs.existsSync(opts.source)){
@@ -60,11 +71,10 @@ module.exports = {
             }else{
                 src += '/**/*.{jpg,png}'
             }
-
             var rowStream = gulp.src(src)
                 .pipe(spritesmith({
                     imgName: row.name+'.png',
-                    cssName: '_'+row.name+'.css',
+                    cssName: '_'+row.name+'.'+opts.outputCss.fileType,
                     // cssTemplate : '$gulp/handlebarsStr.css.handlebars'
                     cssTemplate: (data) => {
                         var tpl = [];
@@ -80,9 +90,9 @@ module.exports = {
                                 cssName += row.name;
                             }
 
-                            tpl.push(opts.outputCss.template({
+                            tpl.push(renderTemplate(opts.outputCss.template, {
                                 name: cssName,
-                                url: path.join(opts.outputCss.baseUrl, row.escaped_image),
+                                img: row.escaped_image,
                                 position:{
                                     x: row.px.offset_x,
                                     y: row.px.offset_y
@@ -105,6 +115,6 @@ module.exports = {
                 .pipe(gulp.dest(opts.outputImg.path))
         })
 
-        return merge.apply(this, cssStreamArr).pipe(concatCss(opts.outputCss.file)).pipe(gulp.dest(opts.outputCss.path))
+        return merge.apply(this, cssStreamArr).pipe(concatCss(opts.outputCss.fileName+'.'+opts.outputCss.fileType)).pipe(gulp.dest(opts.outputCss.path))
     }
 }
