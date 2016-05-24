@@ -30,7 +30,7 @@ var config = {
         path: './dist/images/sprites' // sprites生成目录
     },
     outputCss: {
-        fileName: '_sprites.scss', // 生成的文件名
+        fileName: '_sprites', // 生成的文件名，不要后缀
         fileType: 'scss', // 生成的文件格式
         path: './dist/css', // 生成css目录
         prefix: 'sp-', // 生成配置类名的前缀
